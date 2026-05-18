@@ -90,6 +90,32 @@ const GlobalStyles = createGlobalStyle`
     z-index: 9999;
   }
 
+  // Scroll Bar
+   * {
+    scrollbar-width: thin;
+    scrollbar-color:
+      ${({ theme }) => theme.colors.borderLight}
+      transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: ${({ theme }) => theme.colors.border};
+    border-radius: 999px;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: ${({ theme }) => theme.colors.borderLight};
+  }
+
   // *************************
   // Keyframes for animations
   // *************************

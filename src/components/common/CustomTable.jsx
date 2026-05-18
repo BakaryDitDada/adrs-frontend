@@ -1,9 +1,13 @@
-import React, { useState, useEffect } from 'react';
-
+import React, { useCallback, useEffect, useMemo, useState, memo } from 'react';
 import { useSelector } from 'react-redux';
+import { useRouter } from 'next/navigation';
+import { Check, Download, Edit, Eye, Trash } from 'lucide-react';
+
 import { selectCurrentUser } from '@/store/features/auth/authSlice';
-import { exportPDF, exportExcel } from "@/utils/exportFile";
-import { 
+import { exportPDF, exportExcel } from '@/utils/exportFile';
+import { formatDate, isItemChecked } from '@/utils';
+
+import {
   TableContainer,
   TableHeader,
   Table,
@@ -14,273 +18,404 @@ import {
   TableRow,
   DashSearchInput,
   TableFooter,
-  TableCheckbox
+  TableCheckbox,
+  OutlineButton as Button,
 } from './Common.styles';
-// import { PrimaryButton as Button } from './Common.styles';
-import { OutlineButton as Button } from './Common.styles';
-import Pagination from "./CustomPagination";
-import { Download, Edit, Trash, Eye, User as UserIcon } from 'lucide-react';
 
-import { areArraysEqual, formatDate, isItemChecked } from '@/utils';
+import Pagination from './CustomPagination';
 import Loading from './Loading';
- 
-const CustomTable = ({
-  data,
-  filteredData,
-  pages,
-  page,
+import RowActions from './RowActions';
+
+const normalizeLimit = (value, fallback = 1) => {
+  const parsed = Number.parseInt(value, 10);
+  if (Number.isNaN(parsed) || parsed < 1) return fallback;
+  return parsed;
+};
+
+const getRowKey = (item, index) =>
+  item?._id ?? item?.slug ?? item?.employeeId?._id ?? `${index}`;
+
+const getDisplayName = (item) =>
+  [
+    item?.employee?.first_name ?? item?.employeeId?.firstName ?? '',
+    item?.employee?.last_name ?? item?.employeeId?.lastName ?? '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .trim();
+
+const CustomTable = memo(function CustomTable({
+  data = [],
+  filteredData = {},
+  pages = 1,
+  page = 1,
   setPage,
   onSearch,
-  limit,
+  limit = 10,
   setLimit,
-  pagesArray,
+  pagesArray = [],
   checker = true,
-  tableData,
-  checkedItems,
-  allItemsChecked,
+  tableData = [],
+  checkedItems = [],
+  allItemsChecked = [],
   handleAllItemsChecked,
   toggleItemsChecked,
   handleDelete,
+  handleApprove,
   handleDeleteMany,
   onEdit,
-  onAddNew,
-  displayActionIcons = {add: true, delete: true, view: true},
-  isId = false,
-  isSuccess,
-  exportedFileName = "",
+  onAddNew, // kept for API compatibility; currently unused
+  displayActionIcons = { add: true, delete: true, view: false, approve: false },
+  isId = true,
+  isSuccess = true,
+  isLoading = false,
+  exportedFileName = '',
   additionalToolbarButtons = null,
-}) => {
- 
-  const [term, setTerm] = useState('');
+}) {
   const user = useSelector(selectCurrentUser);
-  const [localLimit, setLocalLimit] = useState(limit);
 
-  const isAdmin = user?.role === "admin";
+  const [term, setTerm] = useState('');
+  const [localLimit, setLocalLimit] = useState(limit);
+  const router = useRouter();
+  let content = null;
+
+  const items = Array.isArray(data) ? data : [];
+  const pdfRows = useMemo(() => Array.isArray(filteredData?.pdf) ? filteredData.pdf : [], [filteredData?.pdf]);
+  const excelRows = useMemo(() =>Array.isArray(filteredData?.excel) ? filteredData.excel : [], [filteredData?.excel]);
+
+  const isAdmin = user?.role === 'admin';
 
   useEffect(() => {
     setLocalLimit(limit);
   }, [limit]);
 
-  const handleLimitBlur = () => {
-    let newLimit = parseInt(localLimit, 10);
-    if (isNaN(newLimit) || newLimit < 1) newLimit = 1;
-    if (newLimit !== limit) setLimit(newLimit);
-  };
+  const canManageItem = useCallback(
+    (item) => {
+      if (isAdmin) return true;
 
-  const handleLimitKeyDown = (e) => {
+      const userServiceNumber = user?.service_number;
+      const itemServiceNumber =
+        item?.employee?.service_number ?? item?.employeeId?.service_number;
+
+      return Boolean(userServiceNumber && itemServiceNumber && userServiceNumber === itemServiceNumber);
+    },
+    [isAdmin, user]
+  );
+
+  const handleSearch = useCallback(
+    (value) => {
+      setTerm(value);
+      onSearch?.(value);
+    },
+    [onSearch]
+  );
+
+  const handleLimitBlur = useCallback(() => {
+    const normalized = normalizeLimit(localLimit, limit);
+    setLocalLimit(normalized);
+
+    if (normalized !== limit) {
+      setLimit?.(normalized);
+    }
+  }, [localLimit, limit, setLimit]);
+
+  const handleLimitKeyDown = useCallback((e) => {
     if (e.key === 'Enter') {
-      e.target.blur(); // triggers onBlur
+      e.currentTarget.blur();
     }
-  };
+  }, []);
 
-  const handleSearch = (value) => {
-    setTerm(value);
-    onSearch(value);
-  }
+  const handleEdit = useCallback(
+    (item) => {
+      if (!onEdit) return;
+      onEdit(isId ? item?._id || item?.id : item?.slug);
+    },
+    [isId, onEdit]
+  );
 
-  const handleEdit = (item) => {
-    if(isId === true) {
-      onEdit(item._id);
-    } else {
-      onEdit(item.slug);
-    }
-  }
+  const canShowBulkDelete = checkedItems.length > 1 || (checkedItems.length === items.length && items.length > 0);
 
-  const renderContent = (value, item, index) => {
-    // 1. Actions column
-    if (value.badge === "actions") {
-      return (
-        <TableCell key={item._id + index + 3}>
-          <div className="actions__icons">
-            {(isAdmin || (user?.service_number === item?.employee?.service_number)) &&
-              <Edit className="icon green" title="Edit" onClick={() => handleEdit(item)} />
-            }
-            {(isAdmin || (user?.service_number === item?.employee?.service_number)) &&
-              <Trash className="icon red" title={`Delete ${item.shortcut}`} onClick={() => handleDelete(isId ? item._id : item.slug)} />
-            }
-            {displayActionIcons.view && (
-              <Eye className="icon gray" title="Detail" onClick={() => router.push(`/dashboard/employees/${item.slug}`)}/>
-            )}
-          </div>
-        </TableCell>
-      );
-    }
+  const canExport = pdfRows.length > 0 && excelRows.length > 0;
 
-    // 2. Custom cell renderer (new)
-    if (value.cellRenderer && typeof value.cellRenderer === 'function') {
-      const cellValue = value.field ? item[value.field] : null;
-      return (
-        <TableCell key={item._id + index + 4}>
-          <div className="td-wrapper">
-            {value.cellRenderer(cellValue, item)}
-          </div>
-        </TableCell>
-      );
-    }
+  const renderCell = useCallback(
+    (column, item, index) => {
+      const rowKey = getRowKey(item, index);
 
-    // 3. Date type
-    if (value.type === 'date') {
-      return (
-        <TableCell key={item._id + index + 4}>
-          <div className="td-wrapper">{formatDate(item[value.field])}</div>
-        </TableCell>
-      );
-    }
+      if (column.badge === 'actions') {
+        const actions = [];
 
-    // 4. Special employee field (original logic)
-    if (value.field === 'employee' || value.field === 'employeeId') {
-      return (
-        <TableCell key={item._id + index + 4}>
-          <div className="td-wrapper">{`${item?.employee?.first_name || item?.employeeId?.firstName || ""} ${item?.employeeId?.lastName || ""}`}</div>
-        </TableCell>
-      );
-    }
+        const canManage = canManageItem(item);
 
-    // 5. Special type field for leaves (mapping to user-friendly labels)
-    if (value.field === 'type') {
-      let label;
-      switch (item.type) {
-        case 'vacation':
-          label = 'Vacances';
-          break;
-        case 'sick':
-          label = 'Congé de maladie';
-          break;
-        case 'annual':
-          label = 'Congé annuel';
-          break;
-        case 'unpaid':
-          label = 'Non payé';
-          break;
-        case 'other':
-          label = 'Autre';
-          break;
-        default:
-          label = item.type;
+        if (
+          displayActionIcons?.edit !== false &&
+          canManage
+        ) {
+          actions.push({
+            key: 'edit',
+            label: 'Modifier',
+            icon: Edit,
+            variant: 'green',
+            onClick: () => handleEdit(item),
+          });
+        }
+
+        if (
+          displayActionIcons?.approve !== false &&
+          canManage 
+        ) {
+          actions.push({
+            key: 'approve',
+            label: 'Approuver',
+            icon: Check,
+            variant: 'blue',
+            onClick: () => 
+              handleApprove?.(
+                isId
+                  ? item?._id || item?.id
+                  : item?.slug
+              ),
+          });
+        }
+
+        if (
+          displayActionIcons?.view !== false &&
+          canManage
+        ) {
+          actions.push({
+            key: 'view',
+            label: 'Détail',
+            icon: Eye,
+            variant: 'blue',
+            onClick: () => router.push(isId ? `/tasks/${item?._id || item?.id}` : `/tasks/${item?.slug}`)
+              // handleView?.(
+              //   isId
+              //     ? item?._id || item?.id
+              //     : item?.slug
+              // ),
+          });
+        }
+
+        if (
+          displayActionIcons?.delete !== false &&
+          canManage
+        ) {
+          actions.push({
+            key: 'delete',
+            label: 'Supprimer',
+            icon: Trash,
+            variant: 'red',
+            onClick: () =>
+              handleDelete?.(
+                isId
+                  ? item?._id || item?.id
+                  : item?.slug
+              ),
+          });
+        }
+
+        return (
+          <TableCell key={`${rowKey}-actions`}>
+            <RowActions
+              actions={actions}
+              mode={column.actionsDisplayMode || 'auto'}
+            />
+          </TableCell>
+        );
+            
+        // return (
+        //   <TableCell key={`${rowKey}-actions`}>
+        //     <div className="actions__icons">
+        //       {(displayActionIcons?.edit !== false) && canManageItem(item) && (
+        //         <button
+        //           type="button"
+        //           className="icon-button"
+        //           aria-label="Edit row"
+        //           onClick={() => handleEdit(item)}
+        //         >
+        //           <Edit className="icon green" />
+        //         </button>
+        //       )}
+
+        //       {(displayActionIcons?.delete !== false) && canManageItem(item) && (
+        //         <button
+        //           type="button"
+        //           className="icon-button"
+        //           aria-label="Delete row"
+        //           onClick={() => handleDelete?.(isId ? item?._id || item?.id : item?.slug)}
+        //         >
+        //           <Trash className="icon red" />
+        //         </button>
+        //       )}
+        //     </div>
+        //   </TableCell>
+        // );
       }
 
+      if (typeof column.cellRenderer === 'function') {
+        const cellValue = column.field ? item?.[column.field] : null;
+
+        return (
+          <TableCell key={`${rowKey}-${column.field ?? index}`}>
+            <div className="td-wrapper">{column.cellRenderer(cellValue, item)}</div>
+          </TableCell>
+        );
+      }
+
+      if (column.type === 'date') {
+        return (
+          <TableCell key={`${rowKey}-${column.field ?? index}`}>
+            <div className="td-wrapper">{formatDate(item?.[column.field])}</div>
+          </TableCell>
+        );
+      }
+
+      if (column.field === 'employee' || column.field === 'employeeId') {
+        
+        return (
+          <TableCell key={`${rowKey}-${column.field ?? index}`}>
+            <div className="td-wrapper">{getDisplayName(item)}</div>
+          </TableCell>
+        );
+      }
+
+      const rawValue =
+        column.field === 'postedBy' || column.field === 'orderedBy'
+          ? item?.[column.field]?.username
+          : item?.[column.field];
+
       return (
-        <TableCell key={item._id + index + 4}>
-          <div className="td-wrapper">{label}</div>
+        <TableCell key={`${rowKey}-${column.field ?? index}`}>
+          <div className="td-wrapper">{rawValue ?? '-'}</div>
         </TableCell>
       );
-    }
-    
-    // 5. Default: plain text
+    },
+    [canManageItem, displayActionIcons, handleDelete, handleEdit, isId]
+  );
+
+  const renderExportButtons = useMemo(() => {
+    if (!canExport) return null;
+
     return (
-      <TableCell key={item._id + index + 4}>
-        <div className="td-wrapper">
-          {value.field === "postedBy" || value.field === "orderedBy"
-            ? item[value.field]?.username
-            : item[value.field]}
-        </div>
-      </TableCell>
-    );
-  };
+      <>
+        <Button type="button" onClick={() => exportPDF(pdfRows, exportedFileName)}>
+          <Download size={20} />
+          PDF
+        </Button>
 
-  const renderExportButtons = (exportedFileName) => {
-    if(filteredData.excel && filteredData.pdf && filteredData.excel.length > 0 && filteredData.pdf.length > 0) {
-      return <>
-        <Button onClick={() => exportPDF(filteredData.pdf, exportedFileName)}><Download />PDF</Button>
-        <Button onClick={() => exportExcel(filteredData.excel, exportedFileName)}><Download />EXCEL</Button>
+        <Button type="button" onClick={() => exportExcel(excelRows, exportedFileName)}>
+          <Download size={20} />
+          EXCEL
+        </Button>
       </>
-    } else {
-      return null
-    }
-  }
+    );
+  }, [canExport, excelRows, exportedFileName, pdfRows]);
 
-  return (
+  if(isLoading) content = <Loading height="30rem" iconSize="4rem" />;
+  if(isSuccess) content = (
     <TableContainer>
-
       <TableHeader>
         <DashSearchInput
           placeholder="Rechercher..."
-          onChange={(e) => handleSearch(e.target.value)}
           value={term}
+          onChange={(e) => handleSearch(e.target.value)}
         />
+
         <div className="btn__container">
-          {additionalToolbarButtons}   {/* <-- new */}
-          {renderExportButtons(exportedFileName)}
-          {(checkedItems.length === data?.length && data.length !== 0) || checkedItems.length > 1 ? (
-            <Button style={{borderColor: "red", color: "red"}} onClick={() => handleDeleteMany(checkedItems)}>
+          {renderExportButtons}
+
+          {additionalToolbarButtons}
+          {canShowBulkDelete ? (
+            <Button
+              type="button"
+              style={{ borderColor: 'red', color: 'red' }}
+              onClick={() => handleDeleteMany?.(checkedItems)}
+            >
               Tout supprimer
             </Button>
           ) : null}
         </div>
       </TableHeader>
-      
-      {
 
-        isSuccess ?
-          <>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  {checker && (
-                    <TableCellTh>
-                      <TableCheckbox
-                        className={checkedItems.length > 1 && checkedItems.length < data?.length ? 'checkbox__multi-checked-status' : ''}
-                        id="checkbox1"
-                        type="checkbox"
-                        onChange={() => handleAllItemsChecked(data)}
-                        checked={areArraysEqual(checkedItems, allItemsChecked) || checkedItems.length === data?.length}
-                      />
-                    </TableCellTh>
-                  )}
-                  {tableData?.map((value, index) => (
+      {isSuccess ? (
+        <>
+          <Table>
+            <TableHead>
+              <TableRow>
+                {checker && (
+                  <TableCellTh>
+                    <TableCheckbox
+                      id="select-all-rows"
+                      type="checkbox"
+                      className={
+                        checkedItems.length > 0 && checkedItems.length < items.length
+                          ? 'checkbox__multi-checked-status'
+                          : ''
+                      }
+                      checked={items.length > 0 && checkedItems.length === items.length}
+                      onChange={() => handleAllItemsChecked?.(items)}
+                    />
+                  </TableCellTh>
+                )}
 
-                    <TableCellTh key={index}>{value.header}</TableCellTh>
+                {tableData.map((column, index) => (
+                  <TableCellTh key={column.field ?? column.header ?? index}>
+                    {column.header}
+                  </TableCellTh>
+                ))}
+              </TableRow>
+            </TableHead>
 
-                  ))}
-                </TableRow>
-              </TableHead>
+            <TableBody>
+              {items.map((item, index) => {
+                const rowKey = getRowKey(item, index);
 
-              <TableBody>
-                {data?.map((item, index) => (
-                  <TableRow key={index}>
+                return (
+                  <TableRow key={rowKey}>
                     {checker && (
                       <TableCell>
                         <TableCheckbox
-                          id="checkbox1"
+                          id={`row-checkbox-${rowKey}`}
                           type="checkbox"
-                          checked={isItemChecked(checkedItems, item._id)}
-                          onChange={() => toggleItemsChecked(item._id)}
+                          checked={isItemChecked(checkedItems, item?._id)}
+                          onChange={() => toggleItemsChecked?.(item?._id)}
                         />
                       </TableCell>
                     )}
-                    {tableData?.map((value, i) => renderContent(value, item, i))}
+
+                    {tableData.map((column, columnIndex) => renderCell(column, item, columnIndex))}
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                );
+              })}
+            </TableBody>
+          </Table>
 
-            <TableFooter>
-              <span>
-                Page {page} of {pages}
-              </span>
+          <TableFooter>
+            <span style={{ marginLeft: "1.5rem" }}>
+              Page {page} of {pages}
+            </span>
 
-              <input 
-                className="table-footer__input" 
-                type="number" value={localLimit} 
-                // onChange={(e) => setLimit(e.target.value)}
-                onChange={(e) => setLocalLimit(e.target.value)}
-                onBlur={handleLimitBlur}
-                onKeyDown={handleLimitKeyDown}
-              />
+            <input
+              className="table-footer__input"
+              type="number"
+              min={1}
+              value={localLimit}
+              onChange={(e) => setLocalLimit(e.target.value)}
+              onBlur={handleLimitBlur}
+              onKeyDown={handleLimitKeyDown}
+            />
 
-              <Pagination
-                pagesArray={pagesArray}
-                page={page}
-                pages={pages}
-                setPage={setPage}
-              />
-            </TableFooter> 
-          </> : <Loading height={'30rem'} iconSize={'4rem'}/>
-          
-      }
-
+            <Pagination pagesArray={pagesArray} page={page} pages={pages} setPage={setPage} />
+          </TableFooter>
+        </>
+      ) : (
+        <Loading height="30rem" iconSize="4rem" />
+      )}
     </TableContainer>
+  )
+
+  return (
+    <>{content}</>
   );
-};
+});
 
 export default CustomTable;

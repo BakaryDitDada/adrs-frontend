@@ -82,7 +82,7 @@ export default function Header() {
                 textDecoration: "none",
               }}
             >
-              Espace Employés
+              Portail <strong>ADRS-GES+</strong>
             </Link>
           </div>
         </TopBarContent>

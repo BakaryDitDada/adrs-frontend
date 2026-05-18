@@ -1,7 +1,7 @@
 import {
   DropdownContainer,
   DropdownOverlayBackdrop,
-} from "@/styles/ModalStyled";
+} from "./Dropdown.styles";
 
 const Dropdown = ({
   isopen,

@@ -3,122 +3,90 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import Modal from '@/components/common/Modal';
+
 import {
   useCreateTaskMutation,
   useUpdateTaskMutation,
 } from '@/store/features/tasks/tasksApi';
-import { taskSchema } from '@/schemas/taskSchema';
+import { useSearchEmployeesQuery } from '@/store/features/employees/employeesApi';
+import { useSearchProjectsQuery } from '@/store/features/projects/projectsApi';
 
-import * as S from '../Modal.styles';
-import AsyncMultiSelect from '@/components/common/forms/AsyncMultiSelect';
+import { taskSchema, updateTaskSchema } from '@/schemas/taskSchema';
 
-const defaultValues = {
-  title: '',
-  description: '',
-  type: '',
-  status: '',
-  percentage: '',
-  priority: '',
-  assignedTo: '',
-  attachments: '',
-  startDate: '',
-  dueDate: '',
-  projectId: '',
-  categories: '',
-  notes: '',
-};
-
-function idsToString(value) {
-  if (!value) return '';
-  if (Array.isArray(value)) {
-    return value
-      .map((item) => (typeof item === 'string' ? item : item?._id))
-      .filter(Boolean)
-      .join(', ');
-  }
-  if (typeof value === 'object' && value._id) return value._id;
-  return String(value);
-}
-
-function toIdArray(value) {
-  if (!value) return [];
-  if (Array.isArray(value)) return value;
-  return value
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
+import * as S from '../Modal.styles'; // you can keep the same modal styles
+import AsyncSearchSelect from '@/components/common/forms/AsyncSearchSelect';
+import { toast } from 'sonner';
 
 export default function TaskModal({ isOpen, onClose, task }) {
   const isEditing = !!task;
-
   const [createTask, { isLoading: isCreating }] = useCreateTaskMutation();
   const [updateTask, { isLoading: isUpdating }] = useUpdateTaskMutation();
 
-  // const {
-  //   register,
-  //   handleSubmit,
-  //   reset,
-  //   formState: { errors },
-  // } = useForm({
-  //   resolver: zodResolver(taskSchema),
-  //   defaultValues,
-  // });
+  const defaultValues = {
+    title: '',
+    description: '',
+    type: 'Tâche de Bureau',
+    status: 'A Faire',
+    percentage: 0,
+    priority: 'Médium',
+    assignedTo: [],       // array of user IDs
+    startDate: '',
+    dueDate: '',
+    projectId: '',        // will be a search select or plain input
+    // categories: '',
+    notes: '',
+  };
+
   const {
     register,
     handleSubmit,
-    reset,
     control,
+    reset,
     formState: { errors },
   } = useForm({
-    resolver: zodResolver(taskSchema),
+    resolver: zodResolver(isEditing ? updateTaskSchema : taskSchema),
     defaultValues,
   });
 
+  // When editing, populate the form with the existing task
   useEffect(() => {
     if (task) {
-      reset({
-        title: task.title || '',
-        description: task.description || '',
-        type: task.type || '',
-        status: task.status || '',
-        percentage:
-          task.percentage !== undefined && task.percentage !== null
-            ? String(task.percentage)
-            : '',
-        priority: task.priority || '',
-        assignedTo: idsToString(task.assignedTo),
-        attachments: idsToString(task.attachments),
-        startDate: task.startDate ? new Date(task.startDate).toISOString().split('T')[0] : '',
-        dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
-        projectId: task.projectId?._id || task.projectId || '',
-        categories: task.categories || '',
-        notes: task.notes || '',
-      });
+      const formatted = {
+        ...task,
+        assignedTo: Array.isArray(task.assignedTo)
+          ? task.assignedTo.map((u) => ({ value: u?._id, label: `${u?.firstName} ${u?.lastName}`}))
+          : {},
+        // assignedTo: Array.isArray(task.assignedTo)
+        //   ? task.assignedTo.map((u) => (u?._id ? u._id : u)) // extract _id if populated
+        //   : [],
+        startDate: task.startDate
+          ? new Date(task.startDate).toISOString().split('T')[0]
+          : '',
+        dueDate: task.dueDate
+          ? new Date(task.dueDate).toISOString().split('T')[0]
+          : '',
+        projectId: {value: task.projectId?._id || task.projectId || '', label: task.projectId.name || ""},
+      };
+      reset(formatted);
     } else {
       reset(defaultValues);
     }
   }, [task, reset]);
 
   const onSubmit = async (data) => {
+    console.log("Tasks Data (onSubmit) ::: ", data);
     try {
       const payload = {
         ...data,
-        percentage:
-          data.percentage === '' || data.percentage === undefined
-            ? undefined
-            : Number(data.percentage),
-        assignedTo: toIdArray(data.assignedTo),
-        attachments: toIdArray(data.attachments),
-        projectId: data.projectId || undefined,
-        type: data.type || undefined,
-        status: data.status || undefined,
-        priority: data.priority || undefined,
-        categories: data.categories || undefined,
-        description: data.description || undefined,
-        dueDate: data.dueDate || undefined,
-        notes: data.notes || undefined,
+
+        projectId: data?.projectId?.value,
+
+        assignedTo: data?.assignedTo?.map(
+          (employee) => employee.value
+        ),
       };
+
+      // return console.log("Tasks Payload (onSubmit) ::: ", payload);
 
       if (isEditing) {
         await updateTask({
@@ -128,15 +96,15 @@ export default function TaskModal({ isOpen, onClose, task }) {
       } else {
         await createTask(payload).unwrap();
       }
-
       onClose();
     } catch (err) {
-      console.error("Erreur lors de l'enregistrement", err);
+      console.log('Erreur lors de l\'enregistrement', err);
+      toast.error(`Erreur: ${err?.data?.message || err.message}`);
     }
   };
 
-  const onError = (validationErrors) => {
-    console.log('❌ Validation errors:', validationErrors);
+  const onError = (errors) => {
+    console.log('❌ Validation errors:', errors);
   };
 
   return (
@@ -147,145 +115,171 @@ export default function TaskModal({ isOpen, onClose, task }) {
       size="lg"
     >
       <S.Form onSubmit={handleSubmit(onSubmit, onError)}>
+        {/* Informations principales */}
         <S.Section>
           <S.SectionTitle>Informations principales</S.SectionTitle>
 
-          <S.Grid>
-            <S.Field>
-              <S.Label>Titre *</S.Label>
-              <S.Input {...register('title')} placeholder="Titre de la tâche" />
-              {errors.title && <S.Error>{errors.title.message}</S.Error>}
-            </S.Field>
-
-            <S.Field>
-              <S.Label>Type</S.Label>
-              <S.Select {...register('type')}>
-                <option value="">Sélectionner</option>
-                <option value="Réunion">Réunion</option>
-                <option value="Mission de Terrain">Mission de Terrain</option>
-                <option value="Atelier de Formation">Atelier de Formation</option>
-                <option value="Tâche de Bureau">Tâche de Bureau</option>
-                <option value="Autre">Autre</option>
-              </S.Select>
-              {errors.type && <S.Error>{errors.type.message}</S.Error>}
-            </S.Field>
-          </S.Grid>
+          <S.Field>
+            <S.Label>Titre *</S.Label>
+            <S.Input {...register('title')} placeholder="Nom de la tâche" />
+            {errors.title && <S.Error>{errors.title.message}</S.Error>}
+          </S.Field>
 
           <S.Field>
             <S.Label>Description</S.Label>
             <S.TextArea
               {...register('description')}
-              rows={4}
-              placeholder="Description de la tâche..."
+              rows={3}
+              placeholder="Décrivez la tâche..."
             />
             {errors.description && <S.Error>{errors.description.message}</S.Error>}
           </S.Field>
 
           <S.Grid>
             <S.Field>
+              <S.Label>Type</S.Label>
+              <S.Select {...register('type')}>
+                <option value="Réunion">Réunion</option>
+                <option value="Mission de Terrain">Mission de Terrain</option>
+                <option value="Atelier de Formation">Atelier de Formation</option>
+                <option value="Tâche de Bureau">Tâche de Bureau</option>
+                <option value="Autre">Autre</option>
+              </S.Select>
+            </S.Field>
+
+            <S.Field>
               <S.Label>Statut</S.Label>
               <S.Select {...register('status')}>
-                <option value="">Sélectionner</option>
                 <option value="A Faire">A Faire</option>
                 <option value="En Cours">En Cours</option>
                 <option value="Terminé">Terminé</option>
               </S.Select>
-              {errors.status && <S.Error>{errors.status.message}</S.Error>}
             </S.Field>
 
             <S.Field>
               <S.Label>Priorité</S.Label>
               <S.Select {...register('priority')}>
-                <option value="">Sélectionner</option>
                 <option value="Elevée">Elevée</option>
                 <option value="Médium">Médium</option>
                 <option value="Bas">Bas</option>
               </S.Select>
-              {errors.priority && <S.Error>{errors.priority.message}</S.Error>}
-            </S.Field>
-          </S.Grid>
-
-          <S.Grid>
-            <S.Field>
-              <S.Label>Progression (%)</S.Label>
-              <S.Input
-                type="number"
-                min="0"
-                max="100"
-                {...register('percentage')}
-              />
-              {errors.percentage && <S.Error>{errors.percentage.message}</S.Error>}
             </S.Field>
 
-            <S.Field>
-              <S.Label>Projet ID</S.Label>
+            {/* <S.Field>
+              <S.Label>Catégories</S.Label>
               <S.Input
-                {...register('projectId')}
-                placeholder="ID du projet"
+                {...register('categories')}
+                placeholder="Ex: RH, Administration, Projet IP..."
               />
-              {errors.projectId && <S.Error>{errors.projectId.message}</S.Error>}
-            </S.Field>
+            </S.Field> */}
           </S.Grid>
+        </S.Section>
+
+        {/* Dates et progression */}
+        <S.Section>
+          <S.SectionTitle>Planification</S.SectionTitle>
 
           <S.Grid>
             <S.Field>
               <S.Label>Date de début *</S.Label>
-              <S.Input type="date" {...register('startDate')} />
+              <S.Input
+                type="date"
+                {...register('startDate')}
+              />
               {errors.startDate && <S.Error>{errors.startDate.message}</S.Error>}
             </S.Field>
 
             <S.Field>
               <S.Label>Date d’échéance</S.Label>
-              <S.Input type="date" {...register('dueDate')} />
+              <S.Input
+                type="date"
+                {...register('dueDate')}
+              />
               {errors.dueDate && <S.Error>{errors.dueDate.message}</S.Error>}
             </S.Field>
           </S.Grid>
 
           <S.Field>
-            <AsyncMultiSelect
+            <S.Label>Progression (%)</S.Label>
+            <S.Input
+              type="number"
+              min="0"
+              max="100"
+              {...register('percentage', { valueAsNumber: true })}
+            />
+            {errors.percentage && <S.Error>{errors.percentage.message}</S.Error>}
+          </S.Field>
+        </S.Section>
+
+        {/* Assignation & Projet */}
+        <S.Section>
+          <S.SectionTitle>Assignation & projet</S.SectionTitle>
+
+          {/* Multi-select for assigned employees */}
+          <S.Field>
+            {/* <AsyncSearchSelect
               name="assignedTo"
               control={control}
-              label="Assignés"
-              queryHook={useSearchUsersQuery}
-              mapOption={(user) => ({
-                value: user._id,
-                label: user.fullName,
+              label="Assigné à"
+              queryHook={useSearchEmployeesQuery}
+              mapOption={(employee) => ({
+                value: employee._id,
+                label: `${employee.firstName} ${employee.lastName}`,
+              })}
+              isMulti={true}
+              placeholder="Rechercher des employés..."
+            /> */}
+            <AsyncSearchSelect
+              name="assignedTo"
+              control={control}
+              label="Assignée à"
+
+              queryHook={useSearchEmployeesQuery}
+
+              isMulti
+
+              mapOption={(employee) => ({
+                value: employee._id,
+                label: `${employee.firstName} ${employee.lastName}`,
               })}
             />
-            {/* <S.Label>Assignés (IDs séparés par des virgules)</S.Label>
-            <S.TextArea
-              {...register('assignedTo')}
-              rows={2}
-              placeholder="64f1..., 64f2..., 64f3..."
-            />
-            {errors.assignedTo && <S.Error>{errors.assignedTo.message}</S.Error>} */}
           </S.Field>
 
+          {/* Project ID – placeholder: replace with an AsyncSearchSelect for projects when available */}
           <S.Field>
-            <S.Label>Pièces jointes (IDs séparés par des virgules)</S.Label>
-            <S.TextArea
-              {...register('attachments')}
-              rows={2}
-              placeholder="64f1..., 64f2..., 64f3..."
-            />
-            {errors.attachments && <S.Error>{errors.attachments.message}</S.Error>}
-          </S.Field>
+            <AsyncSearchSelect
+              name="projectId"
+              control={control}
+              label="Projet"
 
-          <S.Field>
-            <S.Label>Catégories</S.Label>
+              queryHook={useSearchProjectsQuery}
+
+              mapOption={(project) => ({
+                value: project._id,
+                label: project.name,
+              })}
+
+              placeholder="Rechercher un projet..."
+            />
+            {/* <S.Label>Projet</S.Label>
             <S.Input
-              {...register('categories')}
-              placeholder="Catégorie principale"
+              {...register('projectId')}
+              placeholder="ID du projet (ex: 64fa...)"
             />
-            {errors.categories && <S.Error>{errors.categories.message}</S.Error>}
+            {errors.projectId && <S.Error>{errors.projectId.message}</S.Error>} */}
           </S.Field>
+        </S.Section>
+
+        {/* Notes */}
+        <S.Section>
+          <S.SectionTitle>Notes</S.SectionTitle>
 
           <S.Field>
-            <S.Label>Notes</S.Label>
+            <S.Label>Notes (min. 20 caractères)</S.Label>
             <S.TextArea
               {...register('notes')}
-              rows={4}
-              placeholder="Notes détaillées..."
+              rows={5}
+              placeholder="Informations supplémentaires..."
             />
             {errors.notes && <S.Error>{errors.notes.message}</S.Error>}
           </S.Field>
@@ -296,7 +290,10 @@ export default function TaskModal({ isOpen, onClose, task }) {
             Annuler
           </S.CancelButton>
 
-          <S.SubmitButton type="submit" disabled={isCreating || isUpdating}>
+          <S.SubmitButton
+            type="submit"
+            disabled={isCreating || isUpdating}
+          >
             {isCreating || isUpdating
               ? 'Enregistrement...'
               : isEditing

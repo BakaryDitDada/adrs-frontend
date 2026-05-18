@@ -26,6 +26,7 @@ export default function ChatWidget() {
   const [input, setInput] = useState('');
   const [typing, setTyping] = useState(false);
   const messagesEndRef = useRef(null);
+  const chatWindowRef = useRef(null);
 
   const [sendMessage] = useSendChatMessageMutation();
 
@@ -55,6 +56,14 @@ export default function ChatWidget() {
       timestamp: new Date().toISOString(),
     },
   ]);
+
+  const closeChat = useCallback(() => {
+    setIsOpen(false);
+  }, []);
+
+  const toggleOpen = useCallback(() => {
+    setIsOpen((prev) => !prev);
+  }, []);
 
   // Update messages when conversation data arrives
   useEffect(() => {
@@ -89,7 +98,63 @@ export default function ChatWidget() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, typing]);
 
-  const toggleOpen = () => setIsOpen(!isOpen);
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        closeChat();
+      }
+    };
+
+    document.addEventListener(
+      'keydown',
+      handleEscape
+    );
+
+    return () => {
+      document.removeEventListener(
+        'keydown',
+        handleEscape
+      );
+    };
+  }, [isOpen, closeChat]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleOutsideClick = (
+      event
+    ) => {
+      const target = event.target;
+
+      if (!(target instanceof Node)) {
+        return;
+      }
+
+      const chatWindow =
+        chatWindowRef.current;
+
+      if (
+        chatWindow &&
+        !chatWindow.contains(target)
+      ) {
+        closeChat();
+      }
+    };
+
+    document.addEventListener(
+      'pointerdown',
+      handleOutsideClick
+    );
+
+    return () => {
+      document.removeEventListener(
+        'pointerdown',
+        handleOutsideClick
+      );
+    };
+  }, [isOpen, closeChat]);
 
   const handleSend = async () => {
     const trimmed = input.trim();
@@ -168,6 +233,7 @@ export default function ChatWidget() {
       <AnimatePresence>
         {isOpen && (
           <S.ChatWindow
+            ref={chatWindowRef}
             as={motion.div}
             initial={{ opacity: 0, y: 50, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}

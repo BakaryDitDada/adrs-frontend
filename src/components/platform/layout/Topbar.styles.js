@@ -76,6 +76,41 @@ export const UserMenu = styled.div`
   position: relative;
 `;
 
+export const UserMenuButton = styled.button`
+  border: none;
+  background: transparent;
+
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) =>
+    theme.spacing.sm};
+
+  padding:
+    ${({ theme }) => theme.spacing.xs}
+    ${({ theme }) => theme.spacing.md};
+
+  border-radius:
+    ${({ theme }) => theme.radii.lg};
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease;
+
+  &:hover {
+    background:
+      ${({ theme }) =>
+        theme.colors.background.secondary};
+  }
+
+  &:focus-visible {
+    outline: none;
+    outline-offset: 0;
+    // outline: 1px solid ${({ theme }) =>theme.colors.primary};
+    // outline-offset: 1px;
+  }
+`;
+
 export const Avatar = styled.div`
   width: 4rem;
   height: 4rem;
@@ -92,6 +127,7 @@ export const Avatar = styled.div`
 export const UserInfo = styled.div`
   display: flex;
   flex-direction: column;
+  align-items: baseline;
 
   @media (max-width: ${({ theme }) => theme.breakpoints.tablet}) {
     display: none;

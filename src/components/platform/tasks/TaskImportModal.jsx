@@ -7,21 +7,6 @@ export function TaskImportModal(props) {
 
   const handleImport = async (rows) => bulkCreate(rows).unwrap();
 
-  // const handleImport = async (rows) => {
-  //   // Normalize rows before sending to backend
-  //   const normalizedRows = rows.map((row) => ({
-  //     ...row,
-  //     assignedTo: parseArrayField(row.assignedTo),
-  //     attachments: parseArrayField(row.attachments),
-  //     percentage:
-  //       row.percentage !== undefined && row.percentage !== ''
-  //         ? Number(row.percentage)
-  //         : undefined,
-  //   }));
-
-  //   return bulkCreate(normalizedRows).unwrap();
-  // };
-
   return (
     <BulkImportModal
       {...props}

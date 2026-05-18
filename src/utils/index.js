@@ -126,3 +126,51 @@ export const returnStringifiedValue = (type, arr) => {
   }
   return value;
 }
+
+export const normalizeMarkdown = (
+  content = ''
+) => {
+  if (!content) return '';
+
+  let normalized = content.trim();
+
+  /*
+  ========================================
+  REMOVE WRAPPING ```markdown BLOCKS
+  ========================================
+  */
+
+  normalized = normalized.replace(
+    /^```(?:markdown|md)?/i,
+    ''
+  );
+
+  normalized = normalized.replace(
+    /```$/,
+    ''
+  );
+
+  /*
+  ========================================
+  REMOVE EXCESSIVE INDENTATION
+  ========================================
+  */
+
+  normalized = normalized
+    .split('\n')
+    .map((line) => line.trimStart())
+    .join('\n');
+
+  /*
+  ========================================
+  NORMALIZE LINE BREAKS
+  ========================================
+  */
+
+  normalized = normalized.replace(
+    /\n{3,}/g,
+    '\n\n'
+  );
+
+  return normalized.trim();
+};

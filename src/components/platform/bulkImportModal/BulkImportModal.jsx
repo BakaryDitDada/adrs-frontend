@@ -73,7 +73,7 @@ export function BulkImportModal({
     <S.Overlay>
       <S.Modal>
         <S.Header>
-          <h2>Bulk Import {entityLabel}</h2>
+          <h2>Importer des {entityLabel}</h2>
           {step !== STEPS.IMPORTING && (
             <S.CloseButton onClick={onClose}>×</S.CloseButton>
           )}

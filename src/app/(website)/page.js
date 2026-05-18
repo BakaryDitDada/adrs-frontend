@@ -1,5 +1,7 @@
 'use client';
 
+import { ArrowRight, MessageSquare, Users } from 'lucide-react';
+
 import HeroSlider from '@/components/website/sections/HeroSlider';
 import StatsSection from '@/components/website/sections/StatsSection';
 import FeaturesSection from '@/components/website/sections/FeaturesSection';
@@ -12,7 +14,6 @@ import {
 } from './Home.styles';
 import { sampleHeroConfig } from '@/data/sampleHeroConfig';
 import CTASection from '@/components/common/CTASection';
-import { ArrowRight, MessageSquare, Users } from 'lucide-react';
 
 export default function Home() {
   return (
@@ -24,30 +25,13 @@ export default function Home() {
       <StatsSection />
       
       <FeaturesSection />
-      
-      {/* We'll build these sections later */}
+    
       <AchievementsSection />
 
       <ValuesSection />
 
-      {/* <PartnersSection /> */}
-
       <PartnersLogos />
-      
-      {/* <CtaSection>
-        <CtaContentWrapper>
-        <CtaContent>
-          <CtaTitle>Rejoignez notre mission</CtaTitle>
-          <CtaDescription>
-            Ensemble, construisons une vallée du fleuve Sénégal prospère, 
-            résiliente et solidaire.
-          </CtaDescription>
-          <CtaButton href="/contact">
-            Nous Contacter
-          </CtaButton>
-        </CtaContent>
-        </CtaContentWrapper>
-      </CtaSection> */}
+
       <CTASection
         title="Rejoignez notre mission"
         description="Ensemble, construisons une vallée du fleuve Sénégal prospère, résiliente et solidaire."

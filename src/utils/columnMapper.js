@@ -1,6 +1,3 @@
-// src/utils/columnMapper.js
-// import { LEAF_FIELDS } from '@/schemas/employeeSchema';
-
 const clean = (str) => str.toLowerCase().replace(/[^a-z]/g, '');
 
 /**

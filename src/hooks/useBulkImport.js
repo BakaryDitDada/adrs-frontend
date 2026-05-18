@@ -137,8 +137,8 @@ export function useBulkImport({ onClose, onImport, schema, leafFields }) {
     setImporting(true);
     setStep(STEPS.IMPORTING);
     try {
-      // return console.log("Valid Rows (handleImport) :::", validRows, " --------")
-      await onImport(validRows);
+      // return console.log("Valid Rows (handleImport) :::", validRows, " --------");
+      await onImport(validRows).unwrap();
       setStep(STEPS.DONE);
       setTimeout(() => {
         onClose?.();

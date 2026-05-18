@@ -55,6 +55,23 @@ export const leavesApi = baseApiSlice.injectEndpoints({
       invalidatesTags: [{ type: "Leave", id: "LIST" }],
     }),
 
+    approveLeave: builder.mutation({
+      query: (id) => ({
+        url: `/leaves/approve/${id}`,
+        method: "PATCH",
+      }),
+      invalidatesTags: [{ type: "Leave", id: "LIST" }],
+    }),
+
+    deleteLeaves: builder.mutation({
+      query: ({ ids }) => ({ 
+        url: `/leaves/delete-many`,
+        method: "DELETE",
+        body: { ids }
+      }),
+      invalidatesTags: [{ type: "Leave", id: "LIST" }],
+    }),
+
     bulkCreateLeaves: builder.mutation({
       query: (leaves) => ({
         url: "/leaves/create-many",
@@ -75,5 +92,7 @@ export const {
   useCreateLeaveMutation,
   useUpdateLeaveMutation,
   useDeleteLeaveMutation,
+  useDeleteLeavesMutation,
   useBulkCreateLeavesMutation,
+  useApproveLeaveMutation
 } = leavesApi;

@@ -40,8 +40,10 @@ export const PrimaryButton = styled.button`
   align-items: center;
   gap: ${({ theme }) => theme.spacing.xs};
   padding: ${({ theme }) => `${theme.spacing.sm} ${theme.spacing.lg}`};
-  background-color: ${({ theme }) => theme.colors.primary};
-  color: ${({ theme }) => theme.colors.text.primary};
+  background-color: ${({ theme, $bg }) => theme.colors.primaryLight};
+  color: ${({ theme, $color }) => theme.colors.text.primary};
+  // background-color: ${({ theme, $bg }) => $bg || theme.colors.primary};
+  // color: ${({ theme, $color }) => $color || theme.colors.text.primary};
   border: none;
   border-radius: ${({ theme }) => theme.radii.md};
   font-weight: ${({ theme }) => theme.fontWeights.semibold};
@@ -60,11 +62,14 @@ export const OutlineButton = styled.button`
   gap: ${({ theme }) => theme.spacing.xs};
   padding: ${({ theme }) => `${theme.spacing.sm} ${theme.spacing.lg}`};
   background: transparent;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  color: ${({ theme }) => theme.colors.text.secondary};
+  border: 1.2px solid ${({ theme, $border }) => theme.colors.border};
+  color: ${({ theme, $color }) => theme.colors.text.primary};
+  // border: 1px solid ${({ theme, $border }) => $border || theme.colors.border};
+  // color: ${({ theme, $color }) => $color || theme.colors.neutral.white};
   border-radius: ${({ theme }) => theme.radii.md};
-  font-weight: ${({ theme }) => theme.fontWeights.medium};
+  font-weight: ${({ theme }) => theme.fontWeights.semibold};
   font-size: ${({ theme }) => theme.fontSizes.body};
+  box-shadow: ${({ theme }) => theme.shadows.md};
   cursor: pointer;
   transition: all 0.2s;
 
@@ -79,7 +84,6 @@ export const OutlineButton = styled.button`
 /* Badge (employee status)                                                    */
 /* -------------------------------------------------------------------------- */
 const getStatusColor = (theme, status) => {
-  console.log("Status (getStatusColor) ::: ", status);
   const map = {
     active: theme.colors.success,
     ["En activité"]: theme.colors.success,
@@ -94,8 +98,16 @@ const getStatusColor = (theme, status) => {
     ["Contrat terminé"]: theme.colors.error,
     ["En Formation"]: theme.colors.info,
     ["En attente"]: theme.colors.info,
-    ["Non payé"]: theme.colors.info,
+    ["Non payé"]: theme.colors.info, 
+
+    // Task Status Badge
     ["En cours"]: theme.colors.info,
+    ['Terminé']: theme.colors.success,
+    ['A Faire']: theme.colors.info,
+    // Task Priority Badge
+    ["Elevée"]: theme.colors.error,
+    ["Médium"]: theme.colors.warning,
+    ['Bas']: theme.colors.info,
   };
   return map[status] || theme.colors.text.secondary;
 };
@@ -165,7 +177,7 @@ export const TableHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: ${({ theme }) => theme.spacing.lg};
+  margin-bottom: ${({ theme, $mb }) => $mb || theme.spacing.lg};
   gap: ${({ theme }) => theme.spacing.lg};
   font-size: ${({ theme }) => theme.fontSizes.body};
 
@@ -182,9 +194,10 @@ export const DashSearchInput = styled.input`
   width: ${props => props.width || '350px'};
   font-size: ${({ theme }) => theme.fontSizes.body};
   ${props => props.$flex && `flex: ${props.$flex}`};
-  background: ${({ theme }) => theme.colors.background.secondary};
+  background: ${({ theme }) => theme.colors.background.tertiary}; 
   color: ${({ theme }) => theme.colors.text.primary};
   outline: 0;
+  box-shadow: ${({ theme }) => theme.shadows.md};
 
   &::placeholder {
     color: ${({ theme }) => theme.colors.text.light};
@@ -248,6 +261,13 @@ export const TableCell = styled.td`
     gap: ${({ theme }) => theme.spacing.sm};
   }
 
+  button {
+    padding: .5rem .3rem .2rem .3rem;
+    background-color: ${({ theme }) => theme.colors.background.secondary};
+    border: 1px solid ${({ theme }) => theme.colors.border};
+    border-radius: ${({ theme }) => theme.radii.sm};
+}
+
   .icon {
     font-size: ${({ theme }) => theme.fontSizes.caption};
     cursor: pointer;
@@ -278,8 +298,9 @@ export const TableFooter = styled.div`
     font-size: ${({ theme }) => theme.fontSizes.body};
     background-color: ${({ theme }) => theme.colors.background.secondary};
     color: ${({ theme }) => theme.colors.text.secondary};
-    border: 1px solid ${({ theme }) => theme.colors.border};
+    border: 1.2px solid ${({ theme }) => theme.colors.border};
     border-radius: ${({ theme }) => theme.radii.sm};
+    box-shadow: ${({ theme }) => theme.shadows.md};
     outline: none;
     text-align: center;
     transition: border-color 0.3s ease;
@@ -450,6 +471,7 @@ export const PaginationButton = styled.button`
   cursor: pointer;
   transition: all 0.3s ease;
   color: ${({ theme }) => theme.colors.text.primary};
+  box-shadow: ${({ theme }) => theme.shadows.md};
 
   &:hover {
     opacity: 0.85;

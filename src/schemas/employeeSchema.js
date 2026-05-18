@@ -7,7 +7,7 @@ export const EmployeeSchema = z.object({
   workEmail: z.string().email("Email invalide").min(1, "L'email professionnel est requis"),
   dateOfBirth: z.string().optional(),
   gender: z.enum(['Homme', 'Femme']).optional(),
-  maritalStatus: z.enum(["Célébataire", "Marié(e)", "Divorcé(e)", "Veuf(ve)"]).optional(),
+  maritalStatus: z.enum(["Célibataire", "Marié(e)", "Divorcé(e)", "Veuf(ve)"]).optional(),
   nationalId: z.string().optional(),
   address: z.object({
     street: z.string().optional(),

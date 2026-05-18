@@ -215,7 +215,7 @@ export const OverlayPanel = styled.div`
   }
 
   p {
-    font-size: ${({ theme }) => theme.fontSizes.caption};
+    font-size: ${({ theme }) => theme.fontSizes.body};
     color: rgba(255, 255, 255, 0.8);
   }
 
@@ -233,7 +233,7 @@ export const OverlayPanel = styled.div`
     }
 
     .or_text {
-      font-size: ${({ theme }) => theme.fontSizes.caption};
+      font-size: ${({ theme }) => theme.fontSizes.body};
       color: rgba(255, 255, 255, 0.8);
       font-weight: ${({ theme }) => theme.fontWeights.medium};
     }

@@ -12,8 +12,6 @@ export const leaveSchema = z.object({
   endDate: z.string().refine(d => !isNaN(Date.parse(d)), {
     message: "Invalid endDate format"
   }),
-  // days: z.coerce.number().min(0.5).optional(), // auto-calculated if not provided
-  // Pre‑process empty string to undefined so optional works
   days: z.preprocess(
     (val) => (val === '' || val === undefined ? undefined : Number(val)),
     z.number().min(0.5, "Minimum 0.5 jour").optional(),
@@ -21,7 +19,6 @@ export const leaveSchema = z.object({
   reason: z.string().optional(),
   status: z.enum(['En attente', 'Approuvé', 'Rejeté', 'Annulé']).default('En attente'),
   rejectionReason: z.string().optional(),
-  // overrideBalance: z.coerce.boolean().optional()
 });
 
 /**

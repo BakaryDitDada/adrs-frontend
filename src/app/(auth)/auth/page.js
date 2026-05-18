@@ -1,12 +1,13 @@
 'use client'
 
 import { useState } from 'react';
+import { useTheme } from 'styled-components';
 import { useSigninMutation } from '@/store/features/auth/authApi';
 import { setAuthMethod, setCredentials, setAuthSuccess, selectAuthLoading } from '@/store/features/auth/authSlice';
 import LoginForm from '@/components/auth/LoginForm';
 import RegisterForm from '@/components/auth/RegisterForm';
 import usePersist from '@/hooks/auth/usePersist';
-import ThemeToggle from '@/components/ThemeToggle';
+import ThemeToggle from '@/components/common/ThemeToggle';
 
 import {
   PageWrapper,
@@ -17,9 +18,11 @@ import {
   OverlayPanel,
   GhostButton,
 } from '@/styles/pages/auth/auth.styles';
+import { OutlineButton } from '@/components/common/Common.styles';
 
 export default function AuthPage() {
   const [isSignUp, setIsSignUp] = useState(false);
+  const theme = useTheme();
 
   return (
     <PageWrapper>
@@ -29,10 +32,7 @@ export default function AuthPage() {
 
       <AuthContainer>
         <FormsWrapper $isSignUp={isSignUp}>
-          {/* Sign Up */}
           <RegisterForm />
-
-          {/* Sign In */}
           <LoginForm />
         </FormsWrapper>
 
@@ -47,9 +47,9 @@ export default function AuthPage() {
                   <span className='or_text'>OU</span>
                   <span className='or_line'></span>
                 </div>
-                <GhostButton onClick={() => setIsSignUp(false)}>
+                <OutlineButton $border={theme.colors.borderLight} onClick={() => setIsSignUp(false)}>
                   Connectez-vous
-                </GhostButton>
+                </OutlineButton>
               </>
             ) : (
               <>
@@ -60,9 +60,9 @@ export default function AuthPage() {
                   <span className='or_text'>OU</span>
                   <span className='or_line'></span>
                 </div>
-                <GhostButton onClick={() => setIsSignUp(true)}>
+                <OutlineButton $border={theme.colors.borderLight} onClick={() => setIsSignUp(true)}>
                   Inscrivez-vous
-                </GhostButton>
+                </OutlineButton>
               </>
             )}
           </OverlayPanel>

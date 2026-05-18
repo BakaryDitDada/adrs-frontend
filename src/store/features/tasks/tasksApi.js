@@ -37,10 +37,10 @@ export const tasksApi = baseApiSlice.injectEndpoints({
     updateTask: builder.mutation({
       query: ({ id, ...body }) => ({
         url: `/tasks/${id}`,
-        method: 'PUT',
+        method: 'PATCH',
         body,
       }),
-      invalidatesTags: (result, error, { id }) => [{ type: 'Task', id }],
+      invalidatesTags: [{ type: 'Task', id: 'LIST' }],
     }),
     deleteTask: builder.mutation({
       query: ({ id }) => ({
@@ -58,7 +58,26 @@ export const tasksApi = baseApiSlice.injectEndpoints({
       // Optimistic update: we can manually update the cache, but for simplicity we'll invalidate the list
       invalidatesTags: (result, error, { id }) => [{ type: 'Task', id }, { type: 'Task', id: 'LIST' }],
     }),
+
+    deleteTasks: builder.mutation({
+      query: ({ ids }) => ({ 
+        url: `/tasks`,
+        method: "DELETE",
+        body: { ids }
+      }),
+      invalidatesTags: [{ type: "Task", id: "LIST" }],
+    }),
+
+    bulkCreateTasks: builder.mutation({
+      query: (tasks) => ({
+        url: "/leaves/create-many",
+        method: "POST",
+        body: { tasks },
+      }),
+      invalidatesTags: [{ type: "Task", id: "LIST" }],
+    }),
   }),
+  overrideExisting: true,
 });
 
 export const {
@@ -69,4 +88,6 @@ export const {
   useUpdateTaskMutation,
   useDeleteTaskMutation,
   usePatchTaskStatusMutation,
+  useBulkCreateTasksMutation,
+  useDeleteTasksMutation
 } = tasksApi;

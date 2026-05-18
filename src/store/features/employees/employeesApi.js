@@ -1,6 +1,4 @@
-// import { baseApi } from '@/store/baseApiSlice';
 import { baseApiSlice } from "@/store/baseApiSlice";
-import { overwrite } from "zod";
 
 export const employeesApi = baseApiSlice.injectEndpoints({
   endpoints: (builder) => ({
@@ -32,6 +30,9 @@ export const employeesApi = baseApiSlice.injectEndpoints({
     getEmployee: builder.query({
       query: (id) => `/employees/${id}`,
       providesTags: [{ type: 'Employee', id: "LIST" }],
+    }),
+    searchEmployees: builder.query({
+      query: ({searchTerm, limit}) => `/employees?search=${searchTerm}&limit=${limit}`,
     }),
     createEmployee: builder.mutation({
       query: (body) => ({
@@ -70,6 +71,7 @@ export const employeesApi = baseApiSlice.injectEndpoints({
 
 export const {
   useGetEmployeesQuery,
+  useSearchEmployeesQuery,
   useGetEmployeesWithPaginationQuery,
   useGetEmployeeQuery,
   useCreateEmployeeMutation,

@@ -8,10 +8,13 @@ import {
   useCreateLeaveMutation,
   useUpdateLeaveMutation,
 } from '@/store/features/leaves/leavesApi';
+import { useSearchEmployeesQuery } from '@/store/features/employees/employeesApi';
 
 import { leaveSchema } from '@/schemas/leaveSchema';
 
 import * as S from '../Modal.styles';
+import AsyncSearchSelect from '@/components/common/forms/AsyncSearchSelect';
+import { toast } from 'sonner';
 
 export default function LeaveModal({ isOpen, onClose, leave }) {
   const isEditing = !!leave;
@@ -38,6 +41,7 @@ export default function LeaveModal({ isOpen, onClose, leave }) {
   const {
     register,
     handleSubmit,
+    control,
     reset,
     formState: { errors },
   } = useForm({
@@ -103,13 +107,13 @@ export default function LeaveModal({ isOpen, onClose, leave }) {
           ...data, 
         }).unwrap();
       } else {
-        console.log("Creating leave ::: ", data);
         await createLeave(data).unwrap();
       }
 
       onClose();
     } catch (err) {
       console.log("Erreur lors de l'enregistrement", err);
+      toast.error(`Erreur lors de l'enregistrement: ${err?.data.message}`)
     }
   };
 
@@ -131,14 +135,28 @@ export default function LeaveModal({ isOpen, onClose, leave }) {
 
           <S.Grid>
             <S.Field>
-              <S.Label>Employé(e) *</S.Label>
+              <AsyncSearchSelect
+                name="employeeId"
+                control={control}
+                label="Employé"
+
+                queryHook={useSearchEmployeesQuery}
+
+                mapOption={(employee) => ({
+                  value: employee._id,
+                  label: `${employee.firstName} ${employee.lastName}`,
+                })}
+
+                placeholder="Rechercher un employé..."
+              />
+              {/* <S.Label>Employé(e) *</S.Label>
               <S.Input
                 {...register('employeeId')}
                 placeholder="ID de l'employé(e)"
               />
               {errors.employeeId && (
                 <S.Error>{errors.employeeId.message}</S.Error>
-              )}
+              )} */}
             </S.Field>
 
             <S.Field>

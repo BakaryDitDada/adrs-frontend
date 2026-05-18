@@ -29,14 +29,14 @@ export default function EmployeeModal({ isOpen, onClose, employee }) {
     position: '',
     department: '',
     hireDate: '',
-    contractType: 'permanent',
+    contractType: 'CDI',
     contractEndDate: '',
-    employmentStatus: 'active',
+    employmentStatus: 'En activité',
     terminationDate: '',
     salaryInfo: { 
       baseSalary: 0,
       currency: 'XOF',
-      payFrequency: 'monthly',
+      payFrequency: 'Mensuel',
       bankAccount: { bankName: '', accountNumber: '', accountHolder: '' },
       allowances: { transportation: 0, housing: 0, other: 0 },
       deductions: { tax: 0, socialSecurity: 0, other: 0 },
@@ -124,8 +124,8 @@ export default function EmployeeModal({ isOpen, onClose, employee }) {
               <S.Label>Genre</S.Label>
               <S.Select {...register('gender')}>
                 <option value="">Sélectionner...</option>
-                <option value="Male">Masculin</option>
-                <option value="Female">Féminin</option>
+                <option value="Homme">Masculin</option>
+                <option value="Femme">Féminin</option>
               </S.Select>
             </S.Field>
           </S.Grid>
@@ -135,10 +135,10 @@ export default function EmployeeModal({ isOpen, onClose, employee }) {
               <S.Label>Situation matrimoniale</S.Label>
               <S.Select {...register('maritalStatus')}>
                 <option value="">Sélectionner...</option>
-                <option value="single">Célibataire</option>
-                <option value="married">Marié(e)</option>
-                <option value="divorced">Divorcé(e)</option>
-                <option value="widowed">Veuf/Veuve</option>
+                <option value="Célibataire">Célibataire</option>
+                <option value="Marié(e)">Marié(e)</option>
+                <option value="Divorcé(e)">Divorcé(e)</option>
+                <option value="Veuf(ve)">Veuf/Veuve</option>
               </S.Select>
             </S.Field>
             <S.Field>
@@ -213,10 +213,10 @@ export default function EmployeeModal({ isOpen, onClose, employee }) {
             <S.Field>
               <S.Label>Type de contrat *</S.Label>
               <S.Select {...register('contractType')}>
-                <option value="permanent">CDI</option>
-                <option value="fixed-term">CDD</option>
-                <option value="intern">Stage</option>
-                <option value="consultant">Consultant</option>
+                <option value="CDI">CDI</option>
+                <option value="CDD">CDD</option>
+                <option value="Stagiaire">Stagiaire</option>
+                <option value="Consultant">Consultant</option>
               </S.Select>
             </S.Field>
           </S.Grid>
@@ -228,10 +228,12 @@ export default function EmployeeModal({ isOpen, onClose, employee }) {
             <S.Field>
               <S.Label>Statut d&apos;emploi</S.Label>
               <S.Select {...register('employmentStatus')}>
-                <option value="active">Actif</option>
-                <option value="inactive">Inactif</option>
-                <option value="terminated">Licencié</option>
-                <option value="on-leave">En congé</option>
+                <option value="En activité">En activité</option>
+                <option value="En formation">En formation</option>
+                <option value="Licencié">Licencié</option>
+                <option value="En congé">En congé</option>
+                <option value="A la retraite">A la retraite</option>
+                <option value="Contrat terminé">Contrat terminé</option>
               </S.Select>
             </S.Field>
           </S.Grid>
@@ -259,9 +261,9 @@ export default function EmployeeModal({ isOpen, onClose, employee }) {
             <S.Field>
               <S.Label>Fréquence de paiement</S.Label>
               <S.Select {...register('salaryInfo.payFrequency')}>
-                <option value="monthly">Mensuel</option>
-                <option value="bi-weekly">Bimensuel</option>
-                <option value="weekly">Hebdomadaire</option>
+                <option value="Mensuel">Mensuel</option>
+                <option value="Bi-hebdomadaire">Bi-hebdomadaire</option>
+                <option value="Hebdomadaire">Hebdomadaire</option>
               </S.Select>
             </S.Field>
           </S.Grid>

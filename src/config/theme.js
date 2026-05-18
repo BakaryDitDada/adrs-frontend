@@ -1,5 +1,3 @@
-// theme.ts
-
 const baseTheme = {
   fonts: {
     primary: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
@@ -120,6 +118,7 @@ export const lightTheme = {
     },
 
     border: '#e5e7eb',
+    borderLight: '#929aa4',
 
     neutral: {
       white: '#ffffff',
@@ -163,6 +162,7 @@ export const darkTheme = {
     },
 
     border: '#4b5563',
+    borderLight: '#929aa4',
 
     neutral: {
       white: '#ffffff',

@@ -10,14 +10,25 @@ export const taskSchema = z.object({
   status: z.enum(['A Faire', 'En Cours', 'Terminé']).optional(),
   percentage: z.coerce.number().min(0).max(100).optional(),
   priority: z.enum(['Elevée', 'Médium', 'Bas']).optional(),
-  assignedTo: z.array(z.string().regex(objectIdRegex)).optional(),
+  // assignedTo: z.array(z.string().regex(objectIdRegex)).optional(),
+  assignedTo: z.array(z.object({
+    value: z.string(),
+    // value: z.string().regex(objectIdRegex),
+    label: z.string(),
+  })).optional(),
+  // projectId: z.string().regex(objectIdRegex).optional(),
+  projectId: z.object({
+    value: z.string(),
+    label: z.string(),
+  }).nullable().optional(),
   attachments: z.array(z.string().regex(objectIdRegex)).optional(),
   startDate: z.string().refine(d => !isNaN(Date.parse(d))),
   dueDate: z.string().refine(d => !isNaN(Date.parse(d))).optional(),
-  projectId: z.string().regex(objectIdRegex).optional(),
-  categories: z.string().optional(),
+  // categories: z.string().optional(),
   notes: z.string().min(20).max(500).optional(),
 });
+
+export const updateTaskSchema = taskSchema.partial();
 
 /**
  * Recursively extracts all leaf paths in dot notation.

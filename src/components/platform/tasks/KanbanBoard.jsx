@@ -5,6 +5,7 @@ import { format, isPast, differenceInDays } from 'date-fns';
 import { MoreVertical, Pencil, Trash2, AlertCircle } from 'lucide-react';
 import * as S from './KanbanBoard.styles';
 import { DashSearchInput, TableHeader } from '@/components/common/Common.styles';
+import AvatarStack from '@/components/ui/avatar/AvatarStack';
 
 const STATUSES = ['A Faire', 'En Cours', 'Terminé'];
 const STATUS_LABELS = {
@@ -118,36 +119,7 @@ export default function KanbanBoard({
     },
     [localTasks, onTaskMove, tasks]
   );
-
-  const renderAssignees = (assignees = []) => {
-    if (!assignees.length) {
-      return <S.Unassigned>Non assigné</S.Unassigned>;
-    }
-
-    const visible = assignees.slice(0, 3);
-    const remaining = assignees.length - 3;
-
-    return (
-      <S.AssigneeGroup>
-        {visible.map((employee, index) => (
-          <S.AssigneeAvatar
-            key={employee._id || index}
-            title={`${employee.firstName} ${employee.lastName}`}
-          >
-            {employee.firstName?.[0]}
-            {employee.lastName?.[0]}
-          </S.AssigneeAvatar>
-        ))}
-
-        {remaining > 0 && (
-          <S.RemainingUsers>
-            +{remaining}
-          </S.RemainingUsers>
-        )}
-      </S.AssigneeGroup>
-    );
-  };
-
+  
   if (isLoading) {
     return <S.LoadingState>Loading board...</S.LoadingState>;
   }
@@ -257,7 +229,12 @@ export default function KanbanBoard({
 
                                 <S.CardFooter>
                                   <S.Assignees>
-                                    {renderAssignees(task.assignedTo)}
+                                    <AvatarStack
+                                      users={task.assignedTo}
+                                      size="md"
+                                      max={3}
+                                    />
+                                    {/* {renderAssignees(task.assignedTo)} */}
                                   </S.Assignees>
                                 </S.CardFooter>
                               </motion.div>

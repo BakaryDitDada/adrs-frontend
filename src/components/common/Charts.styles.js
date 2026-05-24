@@ -4,7 +4,8 @@ export const ChartsGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: ${({ theme }) => theme.spacing.lg};
-  margin-top: ${({ theme }) => theme.spacing.xl};
+  // margin-top: ${({ theme }) => theme.spacing.xl};
+  // margin-top: ${({ theme }) => theme.spacing.sm};
 
   @media (max-width: ${({ theme }) => theme.breakpoints.tablet}) {
     grid-template-columns: 1fr;

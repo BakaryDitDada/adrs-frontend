@@ -5,12 +5,16 @@ const baseTheme = {
   },
 
   fontSizes: {
-    caption: '1.4rem',   // 14px
-    body: '1.6rem',      // 16px
-    bodyLg: '1.8rem',    // 18px
-    h3: '2.4rem',        // 24px
-    h2: '3.2rem',        // 32px
-    h1: '4rem',          // 40px
+    xs: '1.2rem',
+    sm: '1.3rem',
+    caption: '1.3rem',
+    body: '1.4rem',
+    bodyLg: '1.6rem',
+
+    h4: '1.8rem',
+    h3: '2rem',
+    h2: '2.4rem',
+    h1: '3.2rem',
   },
 
   fontWeights: {
@@ -52,25 +56,29 @@ const baseTheme = {
   },
 
   spacing: {
-    xs: '0.8rem',   // 8px
-    sm: '1.2rem',   // 12px
-    md: '1.6rem',   // 16px
-    lg: '2.4rem',   // 24px
-    xl: '3.2rem',   // 32px
-    xxl: '4rem',    // 40px
+    xxs: '0.4rem', // 4
+    xs: '0.8rem',  // 8
+    sm: '1.2rem',  // 12
+    md: '1.6rem',  // 16
+    lg: '2rem',    // 20
+    xl: '2.4rem',  // 24
+    xxl: '3.2rem', // 32
   },
 
   radii: {
-    none: '0',
-    sm: '0.4rem',
+    sm: '0.6rem',
     md: '0.8rem',
     lg: '1.2rem',
-    xl: '2rem',
-    xxl: '5rem',
+    xl: '1.6rem',
+    xxl: '2rem',
     full: '9999px',
   },
 
   shadows: {
+    low: '0 1px 2px rgba(0,0,0,0.2)',
+    medium: '0 8px 24px rgba(0,0,0,0.24)',
+    high: '0 16px 40px rgba(0,0,0,0.3)',
+
     sm: '0 1px 2px rgba(0,0,0,0.05)',
     md: '0 4px 6px rgba(0,0,0,0.1)',
     lg: '0 10px 15px rgba(0,0,0,0.1)',
@@ -83,6 +91,39 @@ const baseTheme = {
     desktop: '1024px',
     largeDesktop: '1440px',
   },
+
+  elevation: {
+    low: '0 1px 2px rgba(0,0,0,0.2)',
+    medium: '0 8px 24px rgba(0,0,0,0.24)',
+    high: '0 16px 40px rgba(0,0,0,0.3)',
+  },
+
+  surface: {
+    page: '#020817',
+    card: '#0f172a',
+    elevated: '#111827',
+    hover: '#1e293b',
+    active: '#2563eb15',
+  },
+
+  motion: {
+    fast: '120ms ease',
+    normal: '180ms ease',
+    slow: '260ms ease',
+  },
+
+  zIndex: {
+    dropdown: 1000,
+    sticky: 1100,
+    modal: 1300,
+    toast: 1500,
+  },
+
+  layout: {
+    sidebarWidth: '28rem',
+    contentMax: '160rem',
+    headerHeight: '6.4rem',
+  }
 };
 
 // Light Theme
@@ -118,6 +159,7 @@ export const lightTheme = {
     },
 
     border: '#e5e7eb',
+    borderSecondary: '#e5e7eb',
     borderLight: '#929aa4',
 
     neutral: {
@@ -161,7 +203,9 @@ export const darkTheme = {
       tertiary: '#374151',
     },
 
-    border: '#4b5563',
+    // border: '#4b5563',
+    border: 'rgba(255,255,255,0.07)',
+    borderSecondary: 'rgba(255,255,255,0.25)',
     borderLight: '#929aa4',
 
     neutral: {

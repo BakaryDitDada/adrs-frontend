@@ -128,6 +128,12 @@ export const SubmitButton = styled.button`
   }
 `;
 
+export const StatusCard = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing.sm};
+`;
+
 export const TypingDots = styled.span`
   display: flex;
   align-items: center;
@@ -156,6 +162,35 @@ export const ErrorCard = styled.div`
   align-items: center;
   gap: ${({ theme }) => theme.spacing.sm};
   font-weight: ${({ theme }) => theme.fontWeights.medium};
+`;
+
+export const ReportsList = styled.div`
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.radii.lg};
+  // padding: ${({ theme }) => theme.spacing.lg};
+  margin: ${({ theme }) => theme.spacing.lg} auto;
+  box-shadow: ${({ theme }) => theme.shadows.md};
+  transition: box-shadow 0.3s ease;
+
+  p {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: ${({ theme }) => `${theme.spacing.lg}`};
+    border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+    font-size: ${({ theme }) => theme.fontSizes.body};
+    color: ${({ theme }) => theme.colors.text.primary};
+    cursor: pointer;
+
+    &:hover {
+      background-color: ${({ theme }) => theme.colors.background.secondary};
+      color: ${({ theme }) => theme.colors.primary};
+    }
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
 `;
 
 export const ReportCard = styled.div`

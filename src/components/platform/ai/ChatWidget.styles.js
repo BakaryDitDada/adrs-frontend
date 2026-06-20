@@ -93,6 +93,36 @@ export const MessageList = styled.div`
   gap: ${({ theme }) => theme.spacing.md};
 `;
 
+export const ConversationWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  margin: 1rem 0;
+  padding: 1.2rem;
+  border-radius: 8px;
+  background: ${({ theme }) => theme.colors.background.tertiary};
+`;
+
+export const MessagesWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+export const ConversationHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: .5rem;
+  margin-bottom: .5rem;
+`;
+
+export const Title = styled.h3`
+  font-size: ${({ theme }) => theme.fontSizes.caption};
+  // margin-bottom: 0.5rem;
+  // color: #333;
+`;
+
 export const MessageBubble = styled.div`
   display: flex;
   align-items: flex-start;
@@ -152,6 +182,11 @@ export const TypingIndicator = styled.div`
   align-self: flex-start;
   padding: ${({ theme }) => theme.spacing.md};
   color: ${({ theme }) => theme.colors.text.light};
+  font-size: ${({ theme }) => theme.fontSizes.caption};
+
+  display: flex;
+  gap: 0.6rem;
+  flex-direction: column;
 `;
 
 export const TypingDots = styled.div`

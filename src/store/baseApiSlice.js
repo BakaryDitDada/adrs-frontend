@@ -81,6 +81,7 @@ export const baseApiSlice = createApi({
     "Chat",
     "AIChat",
     "AIReport",
+    "AIReports",
     "Message",
     "Notification",
     "Employee",

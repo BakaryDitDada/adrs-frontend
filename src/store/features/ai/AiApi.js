@@ -22,16 +22,41 @@ export const AiApi = baseApiSlice.injectEndpoints({
       transformResponse: (response) => response.data,
       invalidatesTags: [{ type: 'AIChat', id: "LIST" }],
     }),
-    getConversation: builder.query({
-      query: (conversationId) => `/ai/conversations/${conversationId}`,
-      providesTags: [{ type: 'AIChat', id: "LIST" }],
+    // getConversation: builder.query({
+    //   query: (conversationId) => `/ai/conversations/${conversationId}`,
+    //   providesTags: [{ type: 'AIChat', id: "LIST" }],
+    // }),
+    getConversations: builder.query({
+      query: () => `/ai/conversations`,
+      transformResponse: (response) => response.data,
+      providesTags: [{ type: 'AIChat', id: 'LIST' }],
     }),
+    getConversation: builder.query({
+      query: (conversationId) =>`/ai/conversations/${conversationId}`,
+      transformResponse: (response) => response?.data,
+      providesTags: [{ type: 'AIChat', id: 'LIST' }],
+    }),
+    removeConversation: builder.mutation({
+      query: (id) => ({
+        url: `ai/conversations/${id}`,
+        method: "DELETE"
+      }),
+      invalidatesTags: [{ type: 'AIChat', id: 'LIST' }]
+    }),
+    getReports: builder.query({
+      query: () => '/ai/reports',
+      transformResponse: (response) => response.data,
+      providesTags: [{ type: 'AIReports', id: "LIST" }],
+    })
   }),
   overrideExisting: true,
 });
 
 export const { 
-  useGenerateReportMutation, 
+  useGenerateReportMutation,
   useSendChatMessageMutation,
   useGetConversationQuery,
+  useGetReportsQuery,
+  useGetConversationsQuery,
+  useRemoveConversationMutation
 } = AiApi;

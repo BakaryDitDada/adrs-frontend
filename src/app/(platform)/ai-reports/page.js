@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,9 +11,10 @@ import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { Sparkles, Send, Copy, CheckCircle, AlertCircle } from 'lucide-react';
-import { useGenerateReportMutation } from '@/store/features/ai/AiApi';
+import { selectCurrentToken } from '@/store/features/auth/authSlice';
+import { useGetReportsQuery } from '@/store/features/ai/AiApi';
 import * as S from './AIReports.styles';
-import { normalizeMarkdown } from '@/utils';
+import { formatDate, truncateStr } from '@/utils';
 
 // Validation schema
 const reportSchema = z.object({
@@ -20,10 +22,16 @@ const reportSchema = z.object({
 });
 
 export default function AIReportsPage() {
-  const [generateReport, { isLoading }] = useGenerateReportMutation();
+  const token = useSelector(selectCurrentToken);
   const [report, setReport] = useState('');
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
+
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamStatus, setStreamStatus] = useState('');
+  const [generationCompleted, setGenerationCompleted] = useState(false);
+
+  const { data: res, isLoading, isError, isSuccess } = useGetReportsQuery();
 
   const {
     register,
@@ -35,16 +43,176 @@ export default function AIReportsPage() {
     defaultValues: { query: '' },
   });
 
-  const onSubmit = async (data) => {
+  const streamReportGeneration = async (query) => {
+
+    setReport('');
     setError('');
+    setGenerationCompleted(false);
+    setIsStreaming(true);
+
     try {
-      const response = await generateReport(data.query).unwrap();
-      setReport(normalizeMarkdown(response?.manualReport));
-      reset(); // clear input
-    } catch (err) {
-      console.error('AI report generation failed:', err);
-      setError('Failed to generate report. Please try again.');
+
+      const response = await fetch(
+        `http://localhost:5000/api/v1/ai/reports/stream`,
+        {
+          method: 'POST',
+
+          headers: {
+            'Content-Type':
+              'application/json',
+
+            Authorization:
+              `Bearer ${ token }`,
+          },
+
+          body: JSON.stringify({
+            query,
+          }),
+        }
+      );
+
+      if (!response.body) {
+        throw new Error(
+          'Streaming non supporté'
+        );
+      }
+
+      const reader =
+        response.body.getReader();
+
+      const decoder =
+        new TextDecoder();
+
+      let buffer = '';
+
+      while (true) {
+
+        const {
+          done,
+          value,
+        } =
+          await reader.read();
+
+        if (done) {
+          break;
+        }
+
+        buffer += decoder.decode(
+          value,
+          {
+            stream: true,
+          }
+        );
+
+        const events =
+          buffer.split('\n\n');
+
+        buffer =
+          events.pop() ?? '';
+
+        for (
+          const eventText
+          of events
+        ) {
+
+          const line =
+            eventText
+              .split('\n')
+              .find(
+                l =>
+                  l.startsWith(
+                    'data:'
+                  )
+              );
+
+          if (!line)
+            continue;
+
+          try {
+
+            const data =
+              JSON.parse(
+                line.replace(
+                  'data:',
+                  ''
+                )
+              );
+
+            switch (
+              data.type
+            ) {
+
+              case 'thinking':
+
+                setStreamStatus(
+                  data.message
+                );
+
+                break;
+
+              case 'token':
+
+                setReport(
+                  prev =>
+                    prev +
+                    data.content
+                );
+
+                break;
+
+              case 'done':
+
+                setGenerationCompleted(
+                  true
+                );
+
+                setStreamStatus(
+                  ''
+                );
+
+                break;
+
+              case 'error':
+
+                setError(
+                  data.message
+                );
+
+                break;
+            }
+
+          } catch (
+            error
+          ) {
+
+            console.error(
+              error
+            );
+          }
+        }
+      }
+
+    } catch (error) {
+
+      console.error(error);
+
+      setError(
+        'Erreur lors de la génération du rapport'
+      );
+
+    } finally {
+
+      setIsStreaming(false);
     }
+  };
+
+  const onSubmit = async (data) => {
+
+    await streamReportGeneration(
+      data.query
+    );
+
+    reset();
   };
 
   const handleCopy = () => {
@@ -86,8 +254,8 @@ export default function AIReportsPage() {
             />
             {errors.query && <S.ErrorMessage>{errors.query.message}</S.ErrorMessage>}
           </S.InputGroup>
-          <S.SubmitButton type="submit" disabled={isLoading}>
-            {isLoading ? (
+          <S.SubmitButton type="submit" disabled={isStreaming}>
+            {isStreaming ? (
               <S.TypingDots>
                 <span>.</span><span>.</span><span>.</span>
               </S.TypingDots>
@@ -98,6 +266,7 @@ export default function AIReportsPage() {
             )}
           </S.SubmitButton>
         </form>
+
       </S.FormCard>
 
       {/* Error */}
@@ -114,7 +283,17 @@ export default function AIReportsPage() {
 
       {/* Report */}
       <AnimatePresence>
-        {report && (
+        {isSuccess && (
+          <S.ReportsList>
+            {res?.reports?.slice(0, 4)?.map((report) => (
+              <p key={report._id} onClick={() => setReport(report.content)}>
+                <span>{truncateStr(report.content, 120)}</span>
+                <span>{formatDate(report.createdAt)}</span>
+              </p>
+            ))}
+          </S.ReportsList>
+        )}
+        {(report || isStreaming) && (
           <S.ReportCard
             as={motion.div}
             initial={{ opacity: 0, y: 30, scale: 0.98 }}
@@ -124,13 +303,34 @@ export default function AIReportsPage() {
             key="report"
           >
             <S.ReportHeader>
-              <h3>Generated Report</h3>
+              {/* <h3>Generated Report</h3> */}
+              <h3>
+                 {generationCompleted
+                  ? 'Rapport généré'
+                  : 'Génération en cours...'}
+              </h3>
               <S.CopyButton onClick={handleCopy} title="Copy report">
                 {copied ? <CheckCircle size={18} /> : <Copy size={18} />}
                 {copied ? 'Copied!' : 'Copy'}
               </S.CopyButton>
             </S.ReportHeader>
+              
             <S.ReportContent>
+              {isStreaming && (
+                <S.StatusCard>
+
+                  <S.TypingDots>
+                    <span>.</span>
+                    <span>.</span>
+                    <span>.</span>
+                  </S.TypingDots>
+
+                  <span>
+                    {streamStatus}
+                  </span>
+
+                </S.StatusCard>
+              )}
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{

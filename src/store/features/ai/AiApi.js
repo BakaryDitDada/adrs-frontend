@@ -32,7 +32,13 @@ export const AiApi = baseApiSlice.injectEndpoints({
       providesTags: [{ type: 'AIChat', id: 'LIST' }],
     }),
     getConversation: builder.query({
-      query: (conversationId) =>`/ai/conversations/${conversationId}`,
+      query: (conversationId) => {
+        console.log("Conversation ID type ::: ", typeof(conversationId))
+        if(conversationId) {
+          return `/ai/conversations/${conversationId}`    
+        }
+        return `/ai/conversations`
+      },
       transformResponse: (response) => response?.data,
       providesTags: [{ type: 'AIChat', id: 'LIST' }],
     }),

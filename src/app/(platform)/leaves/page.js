@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { Plus, Upload, AlertCircle } from 'lucide-react';
+import { Plus, Upload, AlertCircle, CalendarCheck } from 'lucide-react';
 
 import {
   useDeleteLeaveMutation,
@@ -160,7 +160,13 @@ export default function LeavesPage() {
           </PrimaryButton>
 
           <PrimaryButton onClick={() => setShowCreateModal(true)}>
-            <Plus size={20} /> Ajouter
+            {
+              user?.role === 'admin' || user?.role === 'hr' || user?.role === 'manager' ? (
+                <><Plus size={20} /> Ajouter</>
+              ) : (
+                <><CalendarCheck size={20} /> Demander un congé</>
+              )
+            }
           </PrimaryButton>
         </div>
       </S.Header>

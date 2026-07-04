@@ -25,9 +25,9 @@ const navItems = [
   { label: 'Employé(e)s', href: '/employees', icon: Users },
   { label: 'Congés', href: '/leaves', icon: Calendar },
   { label: 'Paiements', href: '/payrolls', icon: DollarSign },
-  { label: 'Projets', href: '/projects', icon: FolderKanban },
+  { label: 'Projets', href: '/dash-projects', icon: FolderKanban },
   { label: 'Tâches', href: '/tasks', icon: CheckSquare },
-  { label: 'Documents', href: '/documents', icon: FileText },
+  { label: 'Documents', href: '/dash-docs', icon: FileText },
   { label: 'Rapports IA', href: '/ai-reports', icon: Bot },
 ];
 

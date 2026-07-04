@@ -139,11 +139,20 @@ export default function EmployeesPage() {
   const toolbarButtons = (
     <div style={{ display: 'flex', gap: '0.5rem' }}>
       <S.OutlineButton onClick={() => setShowBulkImport(true)}>
-        <Upload size={16} /> Import
+        {
+          user?.role === 'admin' || user?.role === 'hr' || user?.role === 'manager' ? (
+            <><Upload size={20} /> Import</>
+          ) : null
+        }
       </S.OutlineButton>
 
       <S.PrimaryButton onClick={() => setShowCreateModal(true)}>
-        <Plus size={16} /> Add Employee
+        {/* <Plus size={16} /> Add Employee */}
+        {
+          user?.role === 'admin' || user?.role === 'hr' || user?.role === 'manager' ? (
+            <><Plus size={20} /> Ajouter</>
+          ) : null
+        }
       </S.PrimaryButton>
     </div>
   );

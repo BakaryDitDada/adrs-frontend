@@ -11,7 +11,7 @@ export default function ClientProviders({ children }) {
     <StoreProvider>
       <StyledComponentsRegistry>
         <ThemeInitializer />
-        {children}
+          {children}
         <PersistLogin />
       </StyledComponentsRegistry>
     </StoreProvider>

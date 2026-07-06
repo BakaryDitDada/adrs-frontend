@@ -201,7 +201,11 @@ export default function ChatWidget() {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ message: req.content, conversationId: req.conversationId }),
+      body: JSON.stringify({ 
+        message: req.content, 
+        // conversationId: req.conversationId 
+        ...(req.conversationId && { conversationId: req.conversationId }) // Only includes it if it exists
+      }),
     });
 
     if (!response.ok) throw new Error('Erreur de streaming');

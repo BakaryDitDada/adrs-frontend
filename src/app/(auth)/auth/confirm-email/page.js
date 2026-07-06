@@ -12,7 +12,7 @@ import {
 } from "@/store/features/auth/authSlice";
 import { AuthForm, AuthTitle, AuthNumInput, AuthNumInputGroup, Button, AuthContainer, PageWrapper, ThemeToggleWrapper, ErrorMessage } from "@/styles/pages/auth/auth.styles";
 import { toast } from "sonner";
-import ThemeToggle from "@/components/ThemeToggle";
+import ThemeToggle from "@/components/common/ThemeToggle";
 
 const ConfirmEmail = ({ length = 4 }) => {
   const router = useRouter();

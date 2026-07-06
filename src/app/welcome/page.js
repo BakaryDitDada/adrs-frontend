@@ -3,7 +3,7 @@
 import React from 'react';
 import styled from 'styled-components';
 
-import ThemeToggle from '@/components/ThemeToggle';
+import ThemeToggle from '@/components/common/ThemeToggle';
 import { Container, Title, Description, ColorDemo, ColorBox } from '@/styles/common/welcome.styles';
 
 export default function Welcome() {

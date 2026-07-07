@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 import { useActivateMutation } from "@/store/features/auth/authApi";
 import {
@@ -11,7 +12,6 @@ import {
   setAuthMethod
 } from "@/store/features/auth/authSlice";
 import { AuthForm, AuthTitle, AuthNumInput, AuthNumInputGroup, Button, AuthContainer, PageWrapper, ThemeToggleWrapper, ErrorMessage } from "@/styles/pages/auth/auth.styles";
-import { toast } from "sonner";
 import ThemeToggle from "@/components/common/ThemeToggle";
 
 const ConfirmEmail = ({ length = 4 }) => {
@@ -23,7 +23,7 @@ const ConfirmEmail = ({ length = 4 }) => {
   const [activationCode, setActivationCode] = useState();
   const [error, setError] = useState(null);
   const dispatch = useDispatch();
-  const [activate, {isSuccess, isError}] = useActivateMutation();
+  const [activate, {isSuccess }] = useActivateMutation();
 
   useEffect(() => {
     if(inputRefs.current[0]) inputRefs.current[0].focus();
@@ -144,4 +144,4 @@ const ConfirmEmail = ({ length = 4 }) => {
   );
 };
 
-export default ConfirmEmail;
+export default ConfirmEmail; 

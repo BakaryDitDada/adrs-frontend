@@ -3,7 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
   theme: 'light',       // safe default
   themeType: 'desktop',
-  sidebarOpen: true,
+  sidebarOpen: false,
   sidebarCollapsed: false, // mobile drawer state
   user: null, // { id, name, email, role, avatar?, ... }
   notifications: [], // optional

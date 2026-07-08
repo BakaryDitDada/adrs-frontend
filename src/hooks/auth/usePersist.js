@@ -1,18 +1,21 @@
 import { useState, useEffect } from 'react';
 
 const usePersist = () => {
-    const [persist, setPersist] = useState(
-      JSON.parse(typeof window !== 'undefined' ? localStorage.getItem('persist') || false : false)
-    );
+  const [persist, setPersist] = useState(() => {
+    if (typeof window !== 'undefined') {
+        const localData = localStorage.getItem('persist');
+        return localData ? JSON.parse(localData) : false;
+    }
+    return false;
+  });
 
-    useEffect(() => {
-      if(typeof window !== undefined) {
-        localStorage.setItem('persist', JSON.stringify(persist));
-      }
-    }, [persist])
+  useEffect(() => {
+    if(typeof window !== 'undefined') {
+      localStorage.setItem('persist', JSON.stringify(persist));
+    }
+  }, [persist])
 
-    return [persist, setPersist]
-    
+  return [persist, setPersist]
 }
 
 export default usePersist;

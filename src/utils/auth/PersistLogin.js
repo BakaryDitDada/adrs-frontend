@@ -10,6 +10,8 @@ import {
   setAuthMethod,
   selectAuthSuccess,
   setAuthSuccess,
+  setIsAuthenticated,
+  setAuthLoading
 } from "@/store/features/auth/authSlice";
 import { useRefreshMutation } from "@/store/features/auth/authApi";
 
@@ -29,45 +31,63 @@ const PersistLogin = () => {
       abortControllerRef.current = new AbortController();
 
       try {
-        const res = await refresh().unwrap();
+        await refresh().unwrap();
+
         dispatch(setAuthSuccess(true));
+        dispatch(setIsAuthenticated(true));
       } catch (err) {
+        console.log("Refresh failed: ", err);
         dispatch(setAuthSuccess(false));
+        dispatch(setIsAuthenticated(false));
+      } finally {
+        dispatch(setAuthLoading(false));
       }
     };
 
-    if (!effectRan.current && !token && persist) {
-      verifyRefreshToken();
+    if(!effectRan.current) {
+      if (!token && persist) {
+        verifyRefreshToken();
+      } else {
+        dispatch(setAuthLoading(false));
+      }
     }
 
     return () => {
-      abortControllerRef.current?.abort();
+      // abortControllerRef.current?.abort();
       effectRan.current = true;
     };
   }, [token, persist, refresh, dispatch]);
 
-  useEffect(() => {
-    if (!persist) {
-      dispatch(setAuthMethod(authSuccess ? "welcome" : "signin"));
-      return;
-    }
+  // useEffect(() => {
+  //   if (!persist) {
+  //     dispatch(setAuthMethod(authSuccess ? "welcome" : "signin"));
+  //     dispatch(setIsAuthenticated(false));
+  //     dispatch(setAuthSuccess(false));
+  //     return;
+  //   }
 
-    if (isSuccess && authSuccess) {
-      dispatch(setAuthMethod("welcome"));
-    } else if (token && isUninitialized) {
-      dispatch(setAuthMethod("welcome"));
-    } else if (isError) {
-      dispatch(setAuthMethod("signin"));
-    }
-  }, [
-    persist,
-    isSuccess,
-    isUninitialized,
-    isError,
-    token,
-    authSuccess,
-    dispatch,
-  ]);
+  //   if (isSuccess && authSuccess) {
+  //     dispatch(setAuthMethod("welcome"));
+  //     dispatch(setIsAuthenticated(true));
+  //     dispatch(setAuthSuccess(true));
+  //   } else if (token && isUninitialized) {
+  //     dispatch(setAuthMethod("welcome"));
+  //     dispatch(setIsAuthenticated(true));
+  //     dispatch(setAuthSuccess(true));
+  //   } else if (isError) {
+  //     dispatch(setAuthMethod("signin"));
+  //     dispatch(setIsAuthenticated(false));
+  //     dispatch(setAuthSuccess(true));
+  //   }
+  // }, [
+  //   persist,
+  //   isSuccess,
+  //   isUninitialized,
+  //   isError,
+  //   token,
+  //   authSuccess,
+  //   dispatch,
+  // ]);
 
   return null;
 };

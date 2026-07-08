@@ -8,6 +8,9 @@ export const Container = styled.div`
   flex-direction: column;
   gap: ${({ theme }) => theme.spacing.lg};
   background-color: ${({ theme }) => theme.colors.background.primary};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  width: ${({ $width }) => $width || '100%'};
+  height: ${({ $height }) => $height || '100%'};
   min-height: 100vh;
   padding: ${({ theme }) => theme.spacing.lg};
 `;

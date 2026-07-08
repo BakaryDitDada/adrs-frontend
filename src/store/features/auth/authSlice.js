@@ -70,7 +70,10 @@ const authSlice = createSlice({
       state.isAuthenticated = true;
       state.authLoading = false;
 
+      console.log("Setting credentials in authSlice:", state);
+
       if (typeof window !== "undefined") {
+        console.log("Setting credentials in localStorage:", state);
         localStorage.setItem("user", JSON.stringify(state.user));
         localStorage.setItem("token", JSON.stringify(state.token));
         localStorage.setItem("isAuthenticated", JSON.stringify(state.isAuthenticated));
@@ -83,14 +86,16 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.authSuccess = false;
       state.authMethod = ""
+      state.authLoading = false;
 
       if (typeof window !== "undefined") {
-        localStorage.setItem("user", JSON.stringify(state.user));
-        localStorage.setItem("token", JSON.stringify(state.token));
-        localStorage.setItem("isAuthenticated", JSON.stringify(state.isAuthenticated));
-        localStorage.setItem("authMethod", JSON.stringify(state.authMethod));
-        localStorage.setItem("authSuccess", JSON.stringify(state.authSuccess));
-        localStorage.removeItem("persist", JSON.stringify(false));
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+        localStorage.removeItem("isAuthenticated");
+        localStorage.removeItem("authMethod");
+        localStorage.removeItem("authSuccess");
+        // localStorage.removeItem("persist");
+        localStorage.removeItem("authLoading");
       }
     }, 
     setIsAuthenticated: (state, action) => {

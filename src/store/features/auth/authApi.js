@@ -10,6 +10,22 @@ export const authApiSlice = baseApiSlice.injectEndpoints({
         method: "POST",
         body: { ...credentials },
       }),
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          
+          // Pulling your nested data structure safely out of the JSend/Express response format
+          const access_token = data?.data?.access_token || data?.access_token;
+          const user = data?.data?.user || data?.user;
+
+          if (access_token && user) {
+            // CRITICAL: This explicitly updates your state ONLY during signin execution
+            dispatch(setCredentials({ access_token, user }));
+          }
+        } catch (error) {
+          console.error("Sign-in credential provisioning failed:", error);
+        }
+      },
     }),
     activate: builder.mutation({
       query: (credentials) => ({

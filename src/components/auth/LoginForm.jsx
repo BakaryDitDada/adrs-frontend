@@ -1,14 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useSigninMutation } from "@/store/features/auth/authApi";
 import {
-  setAuthMethod,
-  setCredentials,
-  setAuthSuccess
+  setAuthSuccess,
+  setIsAuthenticated
 } from "@/store/features/auth/authSlice";
 import usePersist from "@/hooks/auth/usePersist";
 import * as S from "./Auth.styles";
@@ -29,17 +28,10 @@ export default function LoginForm() {
       const res = await signin({ email, password }).unwrap();
 
       if (res?.status === "success") {
-        console.log("Signed In User: ", res?.user);
-        dispatch(setAuthMethod("welcome"));
         dispatch(setAuthSuccess(true));
-        dispatch(
-          setCredentials({
-            user: res?.data?.user,
-            access_token: res?.data?.access_token,
-          }),
-        );
+        dispatch(setIsAuthenticated(true));
 
-        JSON.stringify(localStorage.setItem("user_data", res));
+        localStorage.setItem("user_data", JSON.stringify(res?.data));
 
         setEmail("");
         setPassword("");
@@ -103,7 +95,6 @@ export default function LoginForm() {
       </S.CheckboxGroup>
       <S.Button type="submit">
         Se connecter
-        {/* {isLoading ? "Connexion..." : "Se connecter"} */}
       </S.Button>
       {error && <S.ErrorMessage>{error}</S.ErrorMessage>}
     </S.AuthForm>

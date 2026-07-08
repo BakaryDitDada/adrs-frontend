@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { setAuthLoading, setCredentials, setIsAuthenticated } from "./features/auth/authSlice";
+import { setCredentials, signOut } from "./features/auth/authSlice";
 
 const baseUrl = "http://localhost:5000/api/v1";
 // const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
@@ -22,25 +22,25 @@ export const baseQuery = fetchBaseQuery({
 });
 
 export const reauthBaseQuery = async (args, api, extraOptions) => {
+  // Detect the target endpoint URL to prevent self-intercepting loops
+  const requestUrl = typeof args === "string" ? args : args?.url || "";
+  
+  // Checks if the request is targeting signin, signup, or initial token refresh
+  const isAuthEndpoint = 
+    requestUrl.includes("/auth/signin") || 
+    requestUrl.includes("/auth/refresh");
+
   let result = await baseQuery(args, api, extraOptions);
 
-  // console.log("Reauth Result ::: ", result.error)
+  // 1. Isolate the exact scenario where the access token has expired...
+  const isJwtExpired = 
+    result?.error?.status === 401 && 
+    result?.error?.data?.message === "jwt expired";
 
-  if(result?.error?.status === 401 && result?.error?.data?.message === "Unauthorized") {
-    // redirect to login
-    // Avoid hard reload if possible (Next.js best practice)
-    if (typeof window !== "undefined") {
-      window.location.href = "/auth";
-    }
-  }
-
-  if (
-    result?.error?.originalStatus === 403 ||
-    result?.error?.originalStatus === 401 ||
-    result?.error?.data?.message === "jwt expired"
-  ) {
+  if (isJwtExpired && isAuthEndpoint) {
     // Sending refresh token to get new access token
     const refreshResult = await baseQuery("/auth/refresh", api, extraOptions);
+
     if (refreshResult?.data) {
       const user = api.getState().auth.user;
       const access_token = refreshResult.data.access_token;
@@ -51,24 +51,32 @@ export const reauthBaseQuery = async (args, api, extraOptions) => {
       result = await baseQuery(args, api, extraOptions);
 
     } else {
-      api.dispatch(setIsAuthenticated(false))
-      api.dispatch(setAuthLoading(false))
+      api.dispatch(signOut());
 
       // redirect to login
       // Avoid hard reload if possible (Next.js best practice)
       if (typeof window !== "undefined") {
-        window.location.href = "/auth";
+        setTimeout(() => {
+          window.location.href = "/auth";
+        }, 10)
       }
 
       return refreshResult;
     }
+  } else if((result?.error?.status === 401 || result?.error?.status === 403) && !isAuthEndpoint) {
+    api.dispatch(signOut());
+
+    if (typeof window !== "undefined" && window.location.pathname !== "/auth") {
+      setTimeout(() => {
+        window.location.href = "/auth";
+      }, 10)
+    }
+    
+    return result;
   }
 
-  // const { access_token, user } = result?.data;
-
-  // if(result?.data?.status === "success") api.dispatch(setCredentials({ access_token, user }));
-
   return result;
+
 };
 
 export const baseApiSlice = createApi({

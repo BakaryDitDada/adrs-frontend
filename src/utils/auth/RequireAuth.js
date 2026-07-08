@@ -4,33 +4,61 @@ import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import usePersist from '@/hooks/auth/usePersist';
-import { selectIsAuthenticated, selectAuthLoading } from '@/store/features/auth/authSlice';
+import { 
+  selectIsAuthenticated, 
+  selectAuthLoading, 
+  selectCurrentToken 
+} from '@/store/features/auth/authSlice';
 
 const RequireAuth = ({ children, LoadingComponent }) => {
     const router = useRouter();
     const isAuthenticated = useSelector(selectIsAuthenticated);
-    const [persist] = usePersist();
+    const token = useSelector(selectCurrentToken);
     const authLoading = useSelector(selectAuthLoading);
-    const [loading, setLoading] = useState(true);
+    const [persist] = usePersist();
+    
+    // 1. track mounting to prevent Next.js hydration flickering
+    const [mounted, setMounted] = useState(false);
 
-    // console.log("IsAuthenticated:: ", isAuthenticated, " Persist:: ", persist, " AuthLoading:: ", authLoading, " Loading:: ", loading)
+    useEffect(() => {
+        const timer = setTimeout(() => setMounted(true), 0);
+        return () => clearTimeout(timer);
+    }, []);
 
-    React.useEffect(() => {
-        if (!authLoading || !persist) {
+    useEffect(() => {
+        // Do nothing until the component is safely running in the browser
+        if (!mounted) return;
+
+        // Scenario A: Auth processing is completely finished
+        if (!authLoading) {
             if (!isAuthenticated) {
-                router.push('/auth')
-            } else {
-                setLoading(false);
+                router.push('/auth');
             }
+        } 
+        // Scenario B: DEADLOCK BREAKER
+        // If authLoading is stuck at true, but there is no token and no authentication,
+        // there is nothing to load. Redirect immediately.
+        else if (!token && !isAuthenticated) {
+            router.push('/auth');
         }
-    }, [isAuthenticated, authLoading, router, persist]);
+        
+    }, [isAuthenticated, authLoading, token, router, mounted, persist]);
 
-    if (loading || authLoading) {
-        return LoadingComponent || <div>Loading...</div>;
+    // 2. Show loading component during SSR or while active token matching is in progress
+    if (!mounted || authLoading) {
+        if (!token && !isAuthenticated && mounted) {
+            // Fast-track out of loading if we know no session exists
+            return null; 
+        }
+        return LoadingComponent || (
+            <div className="flex h-screen items-center justify-center">
+                <div>Loading...</div>
+            </div>
+        );
     }
 
-    return children;
-
+    // 3. Only render children if verified authentic
+    return isAuthenticated ? children : null;
 }
 
 export default RequireAuth;
